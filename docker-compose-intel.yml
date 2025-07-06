@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  ollama:
+    image: intelanalytics/ipex-llm-inference-cpp-xpu:latest
+    command: bash -c "mkdir /llm/ollama && cd /llm/ollama && /usr/local/bin/init-ollama && ./ollama serve"
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama:/root/.ollama
+    devices:
+      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - USE_XETLA=OFF
+      - SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1
+      - SYCL_CACHE_PERSISTENT=1
+    networks:
+      - llm-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "8080:8080"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - WEBUI_URL=http://localhost:8080
+      - WEBUI_AUTH=False
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - ./open-webui:/app/backend/data
+    networks:
+      - llm-network
+
+networks:
+  llm-network:

@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  ollama:
+    image: ollama/ollama:rocm
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama:/root/.ollama
+    devices:
+      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/kfd:/dev/kfd
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - HSA_OVERRIDE_GFX_VERSION=10.3.0
+    networks:
+      - llm-network
+    healthcheck:
+      test: ["CMD-SHELL", "kill -0 1"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "8080:8080"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - WEBUI_URL=http://localhost:8080
+      - WEBUI_AUTH=False
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - ./open-webui:/app/backend/data
+    networks:
+      - llm-network
+
+networks:
+  llm-network:
