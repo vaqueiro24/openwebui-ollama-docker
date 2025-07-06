@@ -2,6 +2,8 @@
 
 A collection of docker compose files that can spin up an openwebui / ollama stack for both Intel and AMD cards. Tested on both Intel Arc A770 and Radeon RX 6650 XT cards.
 
+OpenWebUI will be accessible at http://[my-servers-ip]:8080
+
 ## Intel
 
 Environment variables were set to the recommended values for an Intel Arc A-Series graphics card, according to this [page](https://ipex-llm-latest.readthedocs.io/en/latest/doc/LLM/Overview/install_gpu.html).
